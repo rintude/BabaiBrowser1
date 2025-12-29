@@ -1,181 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Babai Mini Browser</title>
+<title>Babai Browser</title>
 
 <style>
-*{box-sizing:border-box;}
-body{
-    margin:0;
-    background:#0a0a0a;
-    color:#fff;
-    font-family:system-ui, Arial;
-}
-
-/* Top Bar */
-#topbar{
-    display:flex;
-    gap:8px;
-    padding:8px;
-    background:#202124;
-    align-items:center;
-}
-
-#topbar button{
-    background:#333;
-    border:none;
-    color:white;
-    padding:6px 10px;
-    border-radius:6px;
-    font-size:16px;
-}
-
-#address{
-    flex:1;
-    padding:8px 12px;
-    border-radius:20px;
-    border:none;
-    outline:none;
-}
-
-/* Home */
-#home{
-    padding:15px;
-}
-
-.grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(90px,1fr));
-    gap:12px;
-}
-
-.site{
-    background:#151515;
-    padding:12px 6px;
-    border-radius:10px;
-    text-align:center;
-    font-size:13px;
-    cursor:pointer;
-}
-
-/* Browser */
-#browser{
-    display:none;
-    height:calc(100vh - 50px);
-}
-
-iframe{
-    width:100%;
-    height:100%;
-    border:none;
-    background:white;
-}
+body{margin:0;background:#000;color:#fff;font-family:Arial}
+#bar{display:flex;gap:6px;padding:8px;background:#222}
+button{background:#444;border:0;color:#fff;padding:6px 10px;border-radius:5px}
+input{flex:1;padding:7px;border-radius:20px;border:0}
+#home{padding:15px}
+.site{padding:12px;background:#111;margin:6px;border-radius:6px}
+#browser{display:none;height:calc(100vh - 50px)}
+iframe{width:100%;height:100%;border:0;background:#fff}
 </style>
 </head>
 
 <body>
 
-<!-- TOP BAR -->
-<div id="topbar">
-    <button onclick="goBack()">⬅</button>
-    <button onclick="goForward()">➡</button>
-    <button onclick="goHome()">🏠</button>
-    <input id="address" placeholder="Search or enter URL">
+<div id="bar">
+<button onclick="back()">⬅</button>
+<button onclick="forward()">➡</button>
+<button onclick="home()">🏠</button>
+<input id="addr" placeholder="Search or URL">
 </div>
 
-<!-- HOME -->
 <div id="home">
-    <div class="grid">
-        <div class="site" onclick="openSite('https://www.google.com')">Google</div>
-        <div class="site" onclick="openSite('https://www.youtube.com')">YouTube</div>
-        <div class="site" onclick="openSite('https://chat.openai.com')">ChatGPT</div>
-        <div class="site" onclick="openSite('https://web.whatsapp.com')">WhatsApp</div>
-        <div class="site" onclick="openSite('https://www.facebook.com')">Facebook</div>
-        <div class="site" onclick="openSite('https://www.amazon.in')">Amazon</div>
-    </div>
+<div class="site" onclick="openPage('https://example.com')">Example</div>
+<div class="site" onclick="openPage('https://wikipedia.org')">Wikipedia</div>
+<div class="site" onclick="openPage('https://developer.mozilla.org')">MDN</div>
 </div>
 
-<!-- BROWSER -->
 <div id="browser">
-    <iframe id="frame"></iframe>
+<iframe id="frame"></iframe>
 </div>
 
 <script>
-let historyList = JSON.parse(localStorage.getItem("babai_browser_history")) || [];
-let index = historyList.length - 1;
+let history = JSON.parse(localStorage.getItem("history")) || [];
+let pos = history.length - 1;
 
-/* Open Website */
-function openSite(url){
-    showBrowser();
-
-    historyList = historyList.slice(0, index + 1);
-    historyList.push(url);
-    index++;
-
-    saveHistory();
-    load(url);
+function openPage(url){
+document.getElementById("home").style.display="none";
+document.getElementById("browser").style.display="block";
+history = history.slice(0,pos+1);
+history.push(url); pos++;
+save(); load(url);
 }
 
-/* Load */
 function load(url){
-    document.getElementById("frame").src = url;
-    document.getElementById("address").value = url;
+document.getElementById("frame").src=url;
+document.getElementById("addr").value=url;
 }
 
-/* Navigation */
-function goBack(){
-    if(index > 0){
-        index--;
-        load(historyList[index]);
-    }
+function back(){ if(pos>0){pos--; load(history[pos]);}}
+function forward(){ if(pos<history.length-1){pos++; load(history[pos]);}}
+function home(){
+document.getElementById("browser").style.display="none";
+document.getElementById("home").style.display="block";
 }
 
-function goForward(){
-    if(index < historyList.length - 1){
-        index++;
-        load(historyList[index]);
-    }
-}
+function save(){ localStorage.setItem("history",JSON.stringify(history));}
 
-function goHome(){
-    document.getElementById("browser").style.display="none";
-    document.getElementById("home").style.display="block";
-}
-
-/* UI */
-function showBrowser(){
-    document.getElementById("home").style.display="none";
-    document.getElementById("browser").style.display="block";
-}
-
-/* Address Bar */
-document.getElementById("address").addEventListener("keydown", e=>{
-    if(e.key === "Enter"){
-        let v = e.target.value.trim();
-        if(!v) return;
-
-        let url = (v.includes(".") && !v.includes(" "))
-            ? (v.startsWith("http") ? v : "https://" + v)
-            : "https://www.google.com/search?q=" + encodeURIComponent(v);
-
-        openSite(url);
-    }
-});
-
-/* Storage */
-function saveHistory(){
-    localStorage.setItem("babai_browser_history", JSON.stringify(historyList));
-}
-
-/* Restore Last Page */
-window.onload = ()=>{
-    if(historyList.length){
-        showBrowser();
-        load(historyList[index]);
-    }
-};
+document.getElementById("addr").addEventListener("keydown",e=>{
+if(e.key==="Enter"){
+let v=e.target.value.trim();
+let u=(v.includes(".")&&!v.includes(" "))?(v.startsWith("http")?v:"https://"+v):
+"https://www.google.com/search?q="+encodeURIComponent(v);
+openPage(u);
+}});
 </script>
 
 </body>

@@ -1,84 +1,69 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BABAI BROWSER</title>
+<title>Babai Mini Browser</title>
 
 <style>
+*{box-sizing:border-box;}
 body{
     margin:0;
-    background:#050505;
-    color:white;
-    font-family:Arial, sans-serif;
+    background:#0a0a0a;
+    color:#fff;
+    font-family:system-ui, Arial;
 }
 
-/* Navbar */
-.navbar{
-    background:#202124;
-    padding:8px;
+/* Top Bar */
+#topbar{
     display:flex;
-    align-items:center;
-    gap:10px;
-    border-bottom:1px solid #333;
-}
-
-.logo{
-    font-weight:bold;
-    font-size:18px;
-    cursor:pointer;
-}
-
-.search{
-    flex:1;
-}
-.search input{
-    width:100%;
+    gap:8px;
     padding:8px;
+    background:#202124;
+    align-items:center;
+}
+
+#topbar button{
+    background:#333;
+    border:none;
+    color:white;
+    padding:6px 10px;
+    border-radius:6px;
+    font-size:16px;
+}
+
+#address{
+    flex:1;
+    padding:8px 12px;
     border-radius:20px;
     border:none;
     outline:none;
 }
 
-/* Dashboard */
-#dashboard{
+/* Home */
+#home{
     padding:15px;
 }
 
 .grid{
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(90px,1fr));
-    gap:10px;
+    gap:12px;
 }
 
-.card{
-    background:#121214;
-    padding:10px;
+.site{
+    background:#151515;
+    padding:12px 6px;
+    border-radius:10px;
     text-align:center;
-    border-radius:8px;
+    font-size:13px;
     cursor:pointer;
-    font-size:12px;
 }
 
-/* Browser View */
-#browserView{
+/* Browser */
+#browser{
     display:none;
-    height:calc(100vh - 48px);
-}
-
-.browser-bar{
-    display:flex;
-    gap:10px;
-    padding:8px;
-    background:#202124;
-}
-
-.browser-bar button{
-    padding:6px 10px;
-    background:#333;
-    color:white;
-    border:none;
-    border-radius:5px;
+    height:calc(100vh - 50px);
 }
 
 iframe{
@@ -92,93 +77,103 @@ iframe{
 
 <body>
 
-<!-- NAVBAR -->
-<div class="navbar">
-    <div class="logo" onclick="goHome()">B</div>
-    <div class="search">
-        <input id="searchInput" placeholder="সার্চ বা ইউআরএল লিখুন">
-    </div>
+<!-- TOP BAR -->
+<div id="topbar">
+    <button onclick="goBack()">⬅</button>
+    <button onclick="goForward()">➡</button>
+    <button onclick="goHome()">🏠</button>
+    <input id="address" placeholder="Search or enter URL">
 </div>
 
-<!-- DASHBOARD -->
-<div id="dashboard">
+<!-- HOME -->
+<div id="home">
     <div class="grid">
-        <div class="card" onclick="openPage('https://www.google.com')">Google</div>
-        <div class="card" onclick="openPage('https://www.youtube.com')">YouTube</div>
-        <div class="card" onclick="openPage('https://web.whatsapp.com')">WhatsApp</div>
-        <div class="card" onclick="openPage('https://www.facebook.com')">Facebook</div>
-        <div class="card" onclick="openPage('https://chat.openai.com')">ChatGPT</div>
+        <div class="site" onclick="openSite('https://www.google.com')">Google</div>
+        <div class="site" onclick="openSite('https://www.youtube.com')">YouTube</div>
+        <div class="site" onclick="openSite('https://chat.openai.com')">ChatGPT</div>
+        <div class="site" onclick="openSite('https://web.whatsapp.com')">WhatsApp</div>
+        <div class="site" onclick="openSite('https://www.facebook.com')">Facebook</div>
+        <div class="site" onclick="openSite('https://www.amazon.in')">Amazon</div>
     </div>
 </div>
 
-<!-- BROWSER VIEW -->
-<div id="browserView">
-    <div class="browser-bar">
-        <button onclick="goBack()">⬅</button>
-        <button onclick="goForward()">➡</button>
-        <button onclick="goHome()">🏠</button>
-    </div>
-    <iframe id="browserFrame"></iframe>
+<!-- BROWSER -->
+<div id="browser">
+    <iframe id="frame"></iframe>
 </div>
 
 <script>
-let historyStack = JSON.parse(localStorage.getItem("babaiHistory")) || [];
-let historyIndex = historyStack.length - 1;
+let historyList = JSON.parse(localStorage.getItem("babai_browser_history")) || [];
+let index = historyList.length - 1;
 
-/* Open Page */
-function openPage(url){
-    document.getElementById("dashboard").style.display="none";
-    document.getElementById("browserView").style.display="block";
+/* Open Website */
+function openSite(url){
+    showBrowser();
 
-    historyStack = historyStack.slice(0, historyIndex + 1);
-    historyStack.push(url);
-    historyIndex++;
+    historyList = historyList.slice(0, index + 1);
+    historyList.push(url);
+    index++;
 
-    localStorage.setItem("babaiHistory", JSON.stringify(historyStack));
-    document.getElementById("browserFrame").src = url;
+    saveHistory();
+    load(url);
 }
 
-/* Back */
+/* Load */
+function load(url){
+    document.getElementById("frame").src = url;
+    document.getElementById("address").value = url;
+}
+
+/* Navigation */
 function goBack(){
-    if(historyIndex > 0){
-        historyIndex--;
-        document.getElementById("browserFrame").src = historyStack[historyIndex];
+    if(index > 0){
+        index--;
+        load(historyList[index]);
     }
 }
 
-/* Forward */
 function goForward(){
-    if(historyIndex < historyStack.length - 1){
-        historyIndex++;
-        document.getElementById("browserFrame").src = historyStack[historyIndex];
+    if(index < historyList.length - 1){
+        index++;
+        load(historyList[index]);
     }
 }
 
-/* Home */
 function goHome(){
-    document.getElementById("browserView").style.display="none";
-    document.getElementById("dashboard").style.display="block";
+    document.getElementById("browser").style.display="none";
+    document.getElementById("home").style.display="block";
 }
 
-/* Search Bar */
-document.getElementById("searchInput").addEventListener("keypress", function(e){
+/* UI */
+function showBrowser(){
+    document.getElementById("home").style.display="none";
+    document.getElementById("browser").style.display="block";
+}
+
+/* Address Bar */
+document.getElementById("address").addEventListener("keydown", e=>{
     if(e.key === "Enter"){
-        let val = this.value.trim();
-        if(!val) return;
+        let v = e.target.value.trim();
+        if(!v) return;
 
-        let url = (val.includes(".") && !val.includes(" "))
-            ? (val.startsWith("http") ? val : "https://" + val)
-            : "https://www.google.com/search?q=" + encodeURIComponent(val);
+        let url = (v.includes(".") && !v.includes(" "))
+            ? (v.startsWith("http") ? v : "https://" + v)
+            : "https://www.google.com/search?q=" + encodeURIComponent(v);
 
-        openPage(url);
-        this.value="";
+        openSite(url);
     }
 });
 
+/* Storage */
+function saveHistory(){
+    localStorage.setItem("babai_browser_history", JSON.stringify(historyList));
+}
+
 /* Restore Last Page */
 window.onload = ()=>{
-    if(historyStack.length > 0){
-        openPage(historyStack[historyIndex]);
+    if(historyList.length){
+        showBrowser();
+        load(historyList[index]);
     }
 };
 </script>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BABAI BROWSER</title>
+
+<style>
+body{
+    margin:0;
+    background:#050505;
+    color:white;
+    font-family:Arial, sans-serif;
+}
+
+/* Navbar */
+.navbar{
+    background:#202124;
+    padding:8px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    border-bottom:1px solid #333;
+}
+
+.logo{
+    font-weight:bold;
+    font-size:18px;
+    cursor:pointer;
+}
+
+.search{
+    flex:1;
+}
+.search input{
+    width:100%;
+    padding:8px;
+    border-radius:20px;
+    border:none;
+    outline:none;
+}
+
+/* Dashboard */
+#dashboard{
+    padding:15px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(90px,1fr));
+    gap:10px;
+}
+
+.card{
+    background:#121214;
+    padding:10px;
+    text-align:center;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:12px;
+}
+
+/* Browser View */
+#browserView{
+    display:none;
+    height:calc(100vh - 48px);
+}
+
+.browser-bar{
+    display:flex;
+    gap:10px;
+    padding:8px;
+    background:#202124;
+}
+
+.browser-bar button{
+    padding:6px 10px;
+    background:#333;
+    color:white;
+    border:none;
+    border-radius:5px;
+}
+
+iframe{
+    width:100%;
+    height:100%;
+    border:none;
+    background:white;
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="logo" onclick="goHome()">B</div>
+    <div class="search">
+        <input id="searchInput" placeholder="সার্চ বা ইউআরএল লিখুন">
+    </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+    <div class="grid">
+        <div class="card" onclick="openPage('https://www.google.com')">Google</div>
+        <div class="card" onclick="openPage('https://www.youtube.com')">YouTube</div>
+        <div class="card" onclick="openPage('https://web.whatsapp.com')">WhatsApp</div>
+        <div class="card" onclick="openPage('https://www.facebook.com')">Facebook</div>
+        <div class="card" onclick="openPage('https://chat.openai.com')">ChatGPT</div>
+    </div>
+</div>
+
+<!-- BROWSER VIEW -->
+<div id="browserView">
+    <div class="browser-bar">
+        <button onclick="goBack()">⬅</button>
+        <button onclick="goForward()">➡</button>
+        <button onclick="goHome()">🏠</button>
+    </div>
+    <iframe id="browserFrame"></iframe>
+</div>
+
+<script>
+let historyStack = JSON.parse(localStorage.getItem("babaiHistory")) || [];
+let historyIndex = historyStack.length - 1;
+
+/* Open Page */
+function openPage(url){
+    document.getElementById("dashboard").style.display="none";
+    document.getElementById("browserView").style.display="block";
+
+    historyStack = historyStack.slice(0, historyIndex + 1);
+    historyStack.push(url);
+    historyIndex++;
+
+    localStorage.setItem("babaiHistory", JSON.stringify(historyStack));
+    document.getElementById("browserFrame").src = url;
+}
+
+/* Back */
+function goBack(){
+    if(historyIndex > 0){
+        historyIndex--;
+        document.getElementById("browserFrame").src = historyStack[historyIndex];
+    }
+}
+
+/* Forward */
+function goForward(){
+    if(historyIndex < historyStack.length - 1){
+        historyIndex++;
+        document.getElementById("browserFrame").src = historyStack[historyIndex];
+    }
+}
+
+/* Home */
+function goHome(){
+    document.getElementById("browserView").style.display="none";
+    document.getElementById("dashboard").style.display="block";
+}
+
+/* Search Bar */
+document.getElementById("searchInput").addEventListener("keypress", function(e){
+    if(e.key === "Enter"){
+        let val = this.value.trim();
+        if(!val) return;
+
+        let url = (val.includes(".") && !val.includes(" "))
+            ? (val.startsWith("http") ? val : "https://" + val)
+            : "https://www.google.com/search?q=" + encodeURIComponent(val);
+
+        openPage(url);
+        this.value="";
+    }
+});
+
+/* Restore Last Page */
+window.onload = ()=>{
+    if(historyStack.length > 0){
+        openPage(historyStack[historyIndex]);
+    }
+};
+</script>
+
+</body>
+</html>
